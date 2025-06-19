@@ -3,7 +3,7 @@ import asyncio
 import requests
 import sys
 from telethon import TelegramClient, events
-from telethon.sessions import StringSession # Bu satır eklendi
+from telethon.sessions import StringSession
 
 # Hataların anında loglarda görünmesi için
 sys.stdout.reconfigure(line_buffering=True)
@@ -25,8 +25,6 @@ try:
 
     print("Değişkenler okundu. Client oluşturuluyor...")
     
-    # --- BURASI DÜZELTİLDİ ---
-    # Client'ı doğrudan Session String ile başlatıyoruz
     client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
     
     TARGET_CHANNEL = 'onual_firsat'
@@ -38,9 +36,23 @@ try:
     def send_notification(message):
         """ntfy.sh servisine bildirim gönderir."""
         try:
-            content = (message.text[:200] + '..') if len(message.text) > 200 else message.text
+            # --- BU BÖLÜM GÜNCELLENDİ ---
+            # Mesaj linkini oluştur
             message_link = f"https://t.me/{TARGET_CHANNEL}/{message.id}"
-            headers = { "Title": "Yeni Fırsat Yakalandı!", "Tags": "tada", "Click": message_link, "Priority": "high" }
+            
+            # Telegram mesajında metin olup olmadığını kontrol et
+            text_content = message.text if message.text else "İndirim içeriği için linke tıklayın."
+            
+            # Bildirim içeriğini oluştur: Mesaj metni + görünür link
+            content = f"{text_content}\n\nLink: {message_link}"
+            
+            headers = {
+                "Title": "Yeni Fırsat Yakalandı!",
+                "Tags": "tada",
+                "Click": message_link, # Bildirimin tamamı hala tıklanabilir olacak
+                "Priority": "high"
+            }
+            # ntfy'ye gönder
             requests.post(f"https://ntfy.sh/{NTFY_TOPIC}", data=content.encode('utf-8'), headers=headers)
             print(f"Bildirim gönderildi: {content}")
         except Exception as e:
@@ -49,9 +61,11 @@ try:
     @client.on(events.NewMessage(chats=TARGET_CHANNEL))
     async def handler(event):
         """Kanala gelen her yeni mesajı kontrol eder."""
-        message_text_lower = event.message.text.lower()
+        # Mesajda metin olmasa bile (sadece resim gibi) anahtar kelimeyi yakalamak için
+        # event.raw_text kullanılır. Bu daha güvenilirdir.
+        message_text_lower = event.raw_text.lower()
         if any(keyword in message_text_lower for keyword in KEYWORDS):
-            print(f"Eşleşen mesaj bulundu: {event.message.text}")
+            print(f"Eşleşen mesaj bulundu: {event.raw_text}")
             send_notification(event.message)
 
     async def main():
