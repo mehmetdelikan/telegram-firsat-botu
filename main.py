@@ -34,29 +34,32 @@ try:
     ]
 
     def send_notification(message):
-        """ntfy.sh servisine bildirim gönderir."""
-        try:
-            # --- BU BÖLÜM GÜNCELLENDİ ---
-            # Mesaj linkini oluştur
-            message_link = f"https://t.me/{TARGET_CHANNEL}/{message.id}"
-            
-            # Telegram mesajında metin olup olmadığını kontrol et
-            text_content = message.text if message.text else "İndirim içeriği için linke tıklayın."
-            
-            # Bildirim içeriğini oluştur: Mesaj metni + görünür link
-            content = f"{text_content}\n\nLink: {message_link}"
-            
-            headers = {
-                "Title": "Yeni Fırsat Yakalandı!",
-                "Tags": "tada",
-                "Click": message_link, # Bildirimin tamamı hala tıklanabilir olacak
-                "Priority": "high"
-            }
-            # ntfy'ye gönder
-            requests.post(f"https://ntfy.sh/{NTFY_TOPIC}", data=content.encode('utf-8'), headers=headers)
-            print(f"Bildirim gönderildi: {content}")
-        except Exception as e:
-            print(f"Bildirim gönderilirken hata oluştu: {e}", file=sys.stderr)
+    """ntfy.sh servisine bildirim gönderir."""
+    try:
+        # Mesaj linkini oluştur
+        message_link = f"https://t.me/{TARGET_CHANNEL}/{message.id}"
+        
+        # Telegram mesajında metin olup olmadığını kontrol et
+        text_content = message.text if message.text else "İçerik bulunamadı, linke tıklayın."
+        
+        # Bildirim içeriğini oluştur: Mesaj metni + görünür link
+        content = f"{text_content}\n\nLink: {message_link}"
+        
+        # --- BU BÖLÜM DEĞİŞTİRİLDİ ---
+        # Türkçe karakter hatasını kesin olarak çözmek için başlığı değiştirdik.
+        headers = {
+            "Title": "Yeni Firsat Yakalandi!", # 'ı' harfleri 'i' ile değiştirildi
+            "Tags": "tada",
+            "Click": message_link, 
+            "Priority": "high"
+        }
+        # ntfy'ye gönder
+        requests.post(f"https://ntfy.sh/{NTFY_TOPIC}", data=content.encode('utf-8'), headers=headers)
+        # Başarılı olursa loglara not düş
+        print(f"Bildirim başarıyla gönderildi.")
+
+    except Exception as e:
+        print(f"Bildirim gönderilirken hata oluştu: {e}", file=sys.stderr)
 
     @client.on(events.NewMessage(chats=TARGET_CHANNEL))
     async def handler(event):
