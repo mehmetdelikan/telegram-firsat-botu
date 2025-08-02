@@ -29,8 +29,13 @@ try:
     
     TARGET_CHANNEL = 'onual_firsat'
     KEYWORDS = [
+        "son 3 ayın en düşük fiyatı",
         "son 6 ayın en düşük fiyatı",
         "son 1 yılın en düşük fiyatı"
+    ]
+    # YENİ EKLENEN: Bu kelimeler mesajda varsa bildirim GÖNDERİLMEZ.
+    IGNORE_KEYWORDS = [
+        "günün en çok tıklanan fırsatları"
     ]
 
     def send_notification(message):
@@ -55,9 +60,20 @@ try:
     async def handler(event):
         """Kanala gelen her yeni mesajı kontrol eder."""
         message_text_lower = event.raw_text.lower()
-        if any(keyword in message_text_lower for keyword in KEYWORDS):
-            print(f"Eşleşen mesaj bulundu: {event.raw_text}")
+
+        # --- GÜNCELLENEN KONTROL MANTIĞI ---
+        
+        # 1. Adım: Mesajda bir fırsat anahtar kelimesi var mı?
+        has_trigger_keyword = any(keyword in message_text_lower for keyword in KEYWORDS)
+        
+        # 2. Adım: Mesajda engellenen bir anahtar kelime var mı?
+        has_ignore_keyword = any(keyword in message_text_lower for keyword in IGNORE_KEYWORDS)
+
+        # 3. Adım: Fırsat kelimesi varsa VE engellenen kelime yoksa bildirim gönder.
+        if has_trigger_keyword and not has_ignore_keyword:
+            print(f"Eşleşen mesaj bulundu (Özet değil): {event.raw_text}")
             send_notification(event.message)
+        # --- KONTROL MANTIĞI SONU ---
 
     async def main():
         """Ana program döngüsü."""
