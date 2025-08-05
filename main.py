@@ -36,6 +36,7 @@ try:
     # YENİ EKLENEN: Bu kelimeler mesajda varsa bildirim GÖNDERİLMEZ.
     IGNORE_KEYWORDS = [
         "günün en çok tıklanan fırsatları"
+        "amazon"
     ]
 
     def send_notification(message):
@@ -90,3 +91,4 @@ except Exception as e:
     print(f"KRİTİK HATA: Program başlatılamadı.", file=sys.stderr)
     traceback.print_exc(file=sys.stderr)
     sys.exit(1)
+
